@@ -24,6 +24,7 @@ namespace CursoAspnetCore.Data.Repository
                 .AsNoTracking()
                 .Include(h => h.Weapons)
                 .Include(h => h.HeroBattles)
+                .Include(h => h.SecretIdentity)
                 .ToListAsync();
         }
 
@@ -33,6 +34,7 @@ namespace CursoAspnetCore.Data.Repository
                 .AsNoTracking()
                 .Include(h => h.Weapons)
                 .Include(h => h.HeroBattles)
+                .Include(h => h.SecretIdentity)
                 .FirstOrDefaultAsync(h => h.Id.Equals(id));
         }
     }

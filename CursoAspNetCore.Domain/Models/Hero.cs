@@ -8,5 +8,6 @@ namespace CursoAspNetCore.Domain.Models
         public string Name { get; set; }
         public List<HeroBattles> HeroBattles { get; set; }
         public List<Weapon> Weapons { get; set; }
+        public SecretIdentity SecretIdentity { get; set; }
     }
 }
