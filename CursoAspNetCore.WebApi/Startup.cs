@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using CursoAspnetCore.Data.Interfaces;
+using CursoAspnetCore.Data.Repository;
 using CursoAspNetCore.WebApi.Data;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -31,6 +33,10 @@ namespace CursoAspNetCore.WebApi
             {
                 config.UseMySql(Configuration.GetConnectionString("DefaultConnection"));
             });
+
+            services.AddScoped<IEFCoreRepository, EFCoreRepository>();
+            services.AddScoped<IHeroRepository, HeroRepository>();
+            services.AddScoped<IBattleRepository, BattleRepository>();
 
             services.AddControllers();
         }

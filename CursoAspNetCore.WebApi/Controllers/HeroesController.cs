@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using CursoAspNetCore.Domain.Models;
 using CursoAspNetCore.WebApi.Data;
+using CursoAspnetCore.Data.Interfaces;
 
 namespace CursoAspNetCore.WebApi.Controllers
 {
@@ -14,98 +15,98 @@ namespace CursoAspNetCore.WebApi.Controllers
     [ApiController]
     public class HeroesController : ControllerBase
     {
-        private readonly HeroContext _context;
+        private readonly IHeroRepository _heroRepository;
 
-        public HeroesController(HeroContext context)
+        public HeroesController(IHeroRepository heroRepository)
         {
-            _context = context;
+            _heroRepository = heroRepository;
         }
 
-        // GET: api/Heroes
         [HttpGet]
         public async Task<IActionResult> GetHeroes()
         {
-            var heroes = await _context.Heroes.ToListAsync();
+            IEnumerable<Hero> heroes = await _heroRepository.GetAllHeroes();
             return Ok(heroes);
         }
 
-        // GET: api/Heroes/5
         [HttpGet("{id}")]
         public async Task<IActionResult> GetHero(int id)
         {
-            var hero = await _context.Heroes.FindAsync(id);
+            Hero hero = await _heroRepository.HeroById(id);
 
             if (hero == null)
             {
-                return NotFound();
+                return NotFound("Herói não encontrado!");
             }
 
             return Ok(hero);
         }
 
-        // PUT: api/Heroes/5
-        // To protect from overposting attacks, enable the specific properties you want to bind to, for
-        // more details, see https://go.microsoft.com/fwlink/?linkid=2123754.
         [HttpPut("{id}")]
         public async Task<IActionResult> PutHero(int id, Hero hero)
         {
-            if (id != hero.Id)
-            {
-                return BadRequest();
-            }
+            Hero heroSearch = await _heroRepository.HeroById(id);
 
-            _context.Entry(hero).State = EntityState.Modified;
-
-            try
+            if(heroSearch != null)
             {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!HeroExists(id))
+                try
                 {
-                    return NotFound();
+                    _heroRepository.Update(hero);
+                    await _heroRepository.SaveChangesAsync();
                 }
-                else
+                catch (DbUpdateConcurrencyException ex)
                 {
-                    throw;
+                    return BadRequest($"Error: {ex.Message}");
                 }
+            
+                return Ok("Herói alterado com sucesso!");
             }
 
-            return NoContent();
+            return NotFound("Herói não encontrado!");
         }
-
-        // POST: api/Heroes
-        // To protect from overposting attacks, enable the specific properties you want to bind to, for
-        // more details, see https://go.microsoft.com/fwlink/?linkid=2123754.
+                
         [HttpPost]
         public async Task<IActionResult> PostHero(Hero hero)
         {
-            _context.Heroes.Add(hero);
-            await _context.SaveChangesAsync();
+            if(hero != null)
+            {
+                try
+                {
+                    await _heroRepository.Add(hero);
+                    await _heroRepository.SaveChangesAsync();
+                }
+                catch(DbUpdateConcurrencyException ex)
+                {
+                    return BadRequest($"Error: {ex.Message}");
+                }
+                
+                return CreatedAtAction("Herói adicionado com sucesso!", hero);
+            }
 
-            return CreatedAtAction("GetHero", new { id = hero.Id }, hero);
+            return BadRequest("Você precisa informar dados para cadastrar um novo herói.");
         }
 
-        // DELETE: api/Heroes/5
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteHero(int id)
         {
-            var hero = await _context.Heroes.FindAsync(id);
+            Hero hero = await _heroRepository.HeroById(id);
+
             if (hero == null)
             {
-                return NotFound();
+                return NotFound("Herói não encontrado!");
             }
 
-            _context.Heroes.Remove(hero);
-            await _context.SaveChangesAsync();
+            try
+            {
+                _heroRepository.Remove(hero);
+                await _heroRepository.SaveChangesAsync();
+            }
+            catch (DbUpdateConcurrencyException ex)
+            {
+                return BadRequest($"Erro: {ex.Message}");
+            }
 
             return Ok($"{hero.Name} removido com sucesso.");
-        }
-
-        private bool HeroExists(int id)
-        {
-            return _context.Heroes.Any(e => e.Id == id);
         }
     }
 }
